@@ -1,0 +1,4 @@
+# A hallway that is longer than it looks.
+music_mood = tense_chromatic
+transitions = west:bedroom east:garden
+npcs = 0:npc_dealer

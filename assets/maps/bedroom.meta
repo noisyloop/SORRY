@@ -1,0 +1,4 @@
+# The bedroom: where every run of SORRY begins.
+music_mood = calm_pentatonic
+transitions = east:hallway
+npcs = 0:npc_mother
