@@ -50,6 +50,10 @@ Game::Game()
     if (!room_)
         throw std::runtime_error("Could not load starting room 'bedroom' "
                                  "(missing assets/maps/bedroom.txt?)");
+
+    // The title screen gets its own dreamy theme; the room's mood crossfades
+    // in once the player holds a key to start.
+    audio_.playMood("dream_lydian");
 }
 
 void Game::enterRoom(const std::string& name, const Direction* fromDir, bool autosave) {
@@ -132,6 +136,9 @@ void Game::update(double dt) {
         running_ = false;
 
     switch (state_) {
+    case State::Title:
+        updateTitle(dt);
+        break;
     case State::Exploring:
         if (input_.inventoryPressed()) {
             audio_.playSfx("confirm");
@@ -150,6 +157,20 @@ void Game::update(double dt) {
         if (input_.inventoryPressed() || input_.interactPressed())
             state_ = State::Exploring;
         break;
+    }
+}
+
+void Game::updateTitle(double dt) {
+    // Hold any key to start; releasing resets the fill.
+    if (input_.anyKeyDown()) {
+        titleHold_ += dt;
+        if (titleHold_ >= kTitleHoldSeconds) {
+            state_ = State::Exploring;
+            audio_.playMood(room_->mood());  // crossfade out of the title theme
+            audio_.playSfx("confirm");
+        }
+    } else {
+        titleHold_ = 0;
     }
 }
 
@@ -216,6 +237,11 @@ void Game::pickupItemsUnderPlayer() {
 }
 
 void Game::render() {
+    if (state_ == State::Title) {
+        renderTitle();
+        return;
+    }
+
     const MoodPalette pal = paletteFor(room_->mood());
     renderer_.clear(pal.background);
 
@@ -237,6 +263,37 @@ void Game::render() {
     if (dialogue_.active())
         dialogue_.render(renderer_, assets_);
     renderStatusBar();
+
+    renderer_.present();
+}
+
+void Game::renderTitle() {
+    renderer_.clear(SDL_Color{8, 5, 16, 255});
+
+    // Neon-sign flicker: two incommensurate sines so it never quite repeats.
+    float flicker = 0.78f + 0.22f * static_cast<float>(
+        std::sin(worldTime_ * 3.1) * std::sin(worldTime_ * 7.3));
+    auto dim = [&](SDL_Color c) {
+        return SDL_Color{static_cast<Uint8>(c.r * flicker), static_cast<Uint8>(c.g * flicker),
+                         static_cast<Uint8>(c.b * flicker), c.a};
+    };
+
+    const int cx = Renderer::kWindowW / 2;
+    renderer_.drawTextCentered(assets_, "SORRY", cx + 5, 215, SDL_Color{40, 12, 24, 255}, 5);
+    renderer_.drawTextCentered(assets_, "SORRY", cx, 210, dim(SDL_Color{214, 62, 106, 255}), 5);
+    renderer_.drawTextCentered(assets_, "the desert keeps what you don't say",
+                               cx, 290, SDL_Color{140, 120, 170, 255});
+
+    // Hold-to-start prompt with a fill bar; brightens while a key is held.
+    bool holding = titleHold_ > 0;
+    SDL_Color prompt = holding ? SDL_Color{255, 179, 71, 255} : SDL_Color{200, 190, 215, 255};
+    renderer_.drawTextCentered(assets_, "hold any key", cx, 420, prompt);
+
+    const SDL_Rect bar{cx - 120, 448, 240, 10};
+    renderer_.outlineRect(bar, SDL_Color{60, 40, 80, 255});
+    int fill = static_cast<int>(bar.w * std::min(titleHold_ / kTitleHoldSeconds, 1.0));
+    if (fill > 0)
+        renderer_.fillRect(SDL_Rect{bar.x, bar.y, fill, bar.h}, SDL_Color{255, 179, 71, 255});
 
     renderer_.present();
 }
@@ -332,6 +389,7 @@ void Game::renderStatusBar() {
 
     std::string hint;
     switch (state_) {
+    case State::Title:         break;  // no status bar on the title screen
     case State::InDialogue:    hint = "E: continue"; break;
     case State::InventoryOpen: hint = "I: close"; break;
     case State::Exploring: {

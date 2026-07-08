@@ -4,6 +4,12 @@ void Input::beginFrame() {
     pressed_.fill(false);
 }
 
+bool Input::anyKeyDown() const {
+    for (bool d : down_)
+        if (d) return true;
+    return false;
+}
+
 void Input::handleEvent(const SDL_Event& e) {
     switch (e.type) {
     case SDL_QUIT:

@@ -13,6 +13,7 @@ public:
 
     bool isDown(SDL_Scancode sc) const { return down_[sc]; }
     bool wasPressed(SDL_Scancode sc) const { return pressed_[sc]; }
+    bool anyKeyDown() const;
 
     bool quitRequested() const { return quit_; }
 

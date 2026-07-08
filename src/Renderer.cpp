@@ -60,6 +60,17 @@ void Renderer::drawText(Assets& assets, const std::string& text, int x, int y, S
     SDL_RenderCopy(renderer_.get(), tex, nullptr, &dst);
 }
 
+void Renderer::drawTextCentered(Assets& assets, const std::string& text, int cx, int cy,
+                                SDL_Color c, int scale) {
+    if (text.empty() || scale < 1) return;
+    SDL_Texture* tex = assets.textTexture(text, c);
+    if (!tex) return;
+    int w = 0, h = 0;
+    SDL_QueryTexture(tex, nullptr, nullptr, &w, &h);
+    SDL_Rect dst{cx - w * scale / 2, cy - h * scale / 2, w * scale, h * scale};
+    SDL_RenderCopy(renderer_.get(), tex, nullptr, &dst);
+}
+
 int Renderer::textWidth(Assets& assets, const std::string& text) {
     return assets.measureText(text);
 }
