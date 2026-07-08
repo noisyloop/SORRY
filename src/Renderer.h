@@ -45,6 +45,9 @@ public:
     void fillRect(const SDL_Rect& r, SDL_Color c);
     void outlineRect(const SDL_Rect& r, SDL_Color c);
     void drawText(Assets& assets, const std::string& text, int x, int y, SDL_Color c);
+    // Integer-scaled (chunky) text centered on (cx, cy).
+    void drawTextCentered(Assets& assets, const std::string& text, int cx, int cy,
+                          SDL_Color c, int scale = 1);
     int textWidth(Assets& assets, const std::string& text);
 
 private:

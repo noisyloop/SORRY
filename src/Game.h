@@ -22,7 +22,7 @@ public:
     void run();
 
 private:
-    enum class State { Exploring, InDialogue, InventoryOpen };
+    enum class State { Title, Exploring, InDialogue, InventoryOpen };
 
     // fromDir is the direction the player travelled to get here (spawns them
     // at the matching door); nullptr = use explicit/default position.
@@ -30,10 +30,12 @@ private:
                    bool autosave);
     void save();
     void update(double dt);
+    void updateTitle(double dt);
     void updateExploring(double dt);
     void tryInteract();
     void pickupItemsUnderPlayer();
     void render();
+    void renderTitle();
     void renderWorld();
     void renderStatusBar();
 
@@ -53,7 +55,10 @@ private:
     std::unique_ptr<Room> room_;
     std::unordered_set<std::string> flags_;
 
-    State state_ = State::Exploring;
+    State state_ = State::Title;
     bool running_ = true;
-    double worldTime_ = 0;  // drives ambient animation
+    double worldTime_ = 0;   // drives ambient animation
+    double titleHold_ = 0;   // seconds any key has been held on the title screen
+
+    static constexpr double kTitleHoldSeconds = 0.8;
 };
