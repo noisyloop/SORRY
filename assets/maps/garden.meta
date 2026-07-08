@@ -1,0 +1,5 @@
+# The garden. Bat country. Something in the grass has your handwriting.
+music_mood = melancholy_a_minor
+transitions = west:hallway
+npcs = 0:npc_shadow
+items = 0:apology_note
